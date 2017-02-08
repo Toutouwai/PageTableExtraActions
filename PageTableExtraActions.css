@@ -1,0 +1,11 @@
+.InputfieldPageTable td:last-child { width:1%; } /* ensure delete column is a consistent width */
+.pt-actions { white-space:nowrap; opacity:1 !important; text-decoration:none !important; text-align:center; line-height:0; }
+.pt-actions a { display:inline-block; margin-right:5px; max-width:20px; overflow:hidden; line-height:24px; }
+.pt-actions a:before { font-family:'Fontawesome', sans-serif; display:inline-block; margin-right:5px; padding:0 2px; }
+.pt-actions a.action-unhide:before { content:'\f06e'; }
+.pt-actions a.action-hide:before { content:'\f070'; }
+.pt-actions a.action-pub:before { content:'\f05d'; }
+.pt-actions a.action-unpub:before { content:'\f05c'; }
+.pt-actions .spin-outer { height:24px; padding-top:5px; }
+body.AdminThemeReno .pt-actions .spin-outer .ui-priority-secondary:hover { color:rgb(108, 141, 174) !important; } /* Reno hover fix */
+.pt-actions .th { line-height:24px !important; } /* single column layout */

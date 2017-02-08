@@ -1,0 +1,139 @@
+<?php
+/**
+ *
+ * PageTableExtraActions
+ *
+ * @author Robin Sallis
+ *
+ * ProcessWire 3.x
+ * Copyright (C) 2011 by Ryan Cramer
+ * Licensed under GNU/GPL v2, see LICENSE.TXT
+ *
+ * http://www.processwire.com
+ * http://www.ryancramer.com
+ *
+ */
+
+class PageTableExtraActions extends WireData implements Module {
+
+	/**
+	 * Module information
+	 */
+	public static function getModuleInfo()
+	{
+		return array(
+			'title' => 'PageTable Extra Actions',
+			'version' => 1,
+			'summary' => 'Allows PageTable items to be published/unpublished and hidden/unhidden directly from the inputfield.',
+			'autoload' => "template=admin",
+			'icon' => 'plus-circle',
+		);
+	}
+
+	/**
+	 * Ready
+	 */
+	public function init() {
+		// hooks
+		$this->addHookAfter('ProcessPageEdit::execute', $this, 'addScriptStyles');
+		$this->addHookBefore('InputfieldPageTable::renderTable', $this, 'addActionsColumn');
+		$this->addHookAfter('InputfieldPageTable::render', $this, 'appendToField');
+	}
+
+	/**
+	 * Add script and styles
+	 */
+	public function addScriptStyles($event) {
+		// return if ProcessPageEdit is being loaded via AJAX (image field)
+		if($this->config->ajax) return;
+
+		// add JS function
+		$config = $this->config;
+		$info = $this->getModuleInfo();
+		$version = (int) $info['version'];
+		$config->scripts->add($config->urls->{$this->className} . "{$this->className}.js?v={$version}");
+		$config->styles->add($config->urls->{$this->className} . "{$this->className}.css?v={$version}");
+	}
+
+	/**
+	 * Add actions column
+	 */
+	public function addActionsColumn($event) {
+		$columns = $event->arguments('columns');
+		$columns['actions'] = 1;
+		$event->arguments('columns', $columns);
+	}
+
+	/**
+	 * Append actions JS object to field markup
+	 */
+	public function appendToField($event) {
+		$inputfield = $event->object;
+		$f_name = $inputfield->name;
+
+		$edit_id = (int) $this->input->get('id');
+		if(!$edit_id && $this->process instanceof WirePageEditor) $edit_id = $this->process->getPage()->id;
+		if(!$edit_id) return;
+		$edit_page = $this->pages->get($edit_id);
+
+		$pt_pages = $edit_page->getUnformatted($f_name);
+		$out = array();
+		foreach($pt_pages as $pt_page) {
+			$extras = $this->getExtraActions($pt_page);
+			$out[$pt_page->id] = $extras;
+		}
+		$json = json_encode($out);
+		$event->return .= "<script>pt_fields['$f_name'] = $json</script>";
+	}
+
+	/**
+	 * Get extra actions
+	 */
+	public function getExtraActions(Page $page) {
+		$extras = array();
+		$noSettings = $page->template->noSettings;
+		$statusEditable = $page->editable('status', false);
+
+		if($page->id == 1 || $page->template == 'admin') return $extras;
+		$user = $this->wire('user');
+		if(!$user->superuser && ($noSettings || !$statusEditable)) return $extras;
+
+		$adminUrl = $this->wire('config')->urls->admin . 'page/';
+		$locked = $page->isLocked();
+		$trash = $page->isTrash();
+
+		if(!$locked && !$trash && !$noSettings && $statusEditable) {
+			if($page->publishable()) {
+				if($page->isUnpublished()) {
+					$extras['pub'] = array(
+						'name' => $this->_('Pub'),
+						'url'  => "$adminUrl?action=pub&id=$page->id",
+					);
+				} else if(!$page->template->noUnpublish) {
+					$extras['unpub'] = array(
+						'name' => $this->_('Unpub'),
+						'url'  => "$adminUrl?action=unpub&id=$page->id",
+					);
+				}
+			}
+
+			if($user->hasPermission('page-hide', $page)) {
+				if($page->isHidden()) {
+					$extras['unhide'] = array(
+						'name' => $this->_('Unhide'),
+						'url'  => "$adminUrl?action=unhide&id=$page->id",
+					);
+				} else {
+					$extras['hide'] = array(
+						'name' => $this->_('Hide'),
+						'url'  => "$adminUrl?action=hide&id=$page->id",
+					);
+				}
+			}
+		}
+
+		return $extras;
+
+	}
+
+}
