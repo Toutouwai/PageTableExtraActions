@@ -2,7 +2,7 @@
 
 A module for ProcessWire CMS/CMF. Allows PageTable items to be published/unpublished and hidden/unhidden directly from the inputfield.
 
-See the [forum thread](https://processwire.com/talk/topic/15496-pagetable-extra-actions/) for a screencast of the module in use.
+![pt-actions](https://user-images.githubusercontent.com/1538852/39101036-22d5f260-46e8-11e8-8906-fd7d1dd46e45.gif)
 
 ## Usage
 

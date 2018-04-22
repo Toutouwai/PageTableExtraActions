@@ -23,8 +23,9 @@ class PageTableExtraActions extends WireData implements Module {
 	{
 		return array(
 			'title' => 'PageTable Extra Actions',
-			'version' => 1,
+			'version' => '0.1.0',
 			'summary' => 'Allows PageTable items to be published/unpublished and hidden/unhidden directly from the inputfield.',
+			'author' => 'Robin Sallis',
 			'autoload' => "template=admin",
 			'icon' => 'plus-circle',
 		);
